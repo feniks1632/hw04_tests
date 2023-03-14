@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}
+  Об авторе
+{% endblock %}
+{% load static %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="row">
+      <div class="col">
+          <img src="{% static 'img\avatar.jpg' %}" class="rounded-circle z-depth-0" height="500" width="500" alt="...">
+      </div>
+      <div class="col">
+          <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Бражников Никита Александрович</h5>
+                <p class="card-text">Начинающий Python-программист. Музыкант. Сноубордист.</p>
+                <figure>
+                  <blockquote class="blockquote">
+                    <p>&laquo;Я знаю, что я ничего не знаю.&raquo;</p>
+                  </blockquote>
+                  <figcaption class="blockquote-footer">
+                    Сократ
+                  </figcaption>
+                </figure>
+                <h5 class="card-title">Ссылки</h5>
+                <ul class="list-group">
+                  <li class="list-group-item">GitHub - <a class="text-decoration-none" href="https://github.com/feniks1632">@feniks1632</a></li>
+                  <li class="list-group-item">HH - <a class="text-decoration-none" href="https://orenburg.hh.ru/resume/ed1a0bf9ff0bb7db2a0039ed1f506255587465">Моё резюме</a></li>
+                  <li class="list-group-item">VK - <a class="text-decoration-none" href="https://vk.com/feniks1632">Никита Бражников</a></li>
+                </ul>
+                <h5 class="card-title">Что вдохновляет</h5>
+                <div class="alert alert-primary" role="alert">
+                  Музыка, Технологии, Активные виды спорта, Компьютерные игры
+                </div>
+                
+                <h5 class="card-title">Как я пришел в мир программирования</h5>
+                <div class="alert alert-primary" role="alert">
+                  У меня есть знакомые программисты. Очень часто они рассказывали интересные истории про IT. Меня это вдохновило, и я захотел на себе испытать каково это - быть программистом.
+                </div>
+                
+              </div>
+          </div>
+      </div>
+  </div>
+</div>
+
+{% endblock %}
