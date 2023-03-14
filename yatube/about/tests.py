@@ -9,7 +9,7 @@ class AboutUrlTests(TestCase):
         super(). setUpClass()
 
     def setUp(self):
-        self.guest_client = Client()    
+        self.guest_client = Client()
 
     def test_about_url_exists_at_desired_location(self):
         response = self.guest_client.get('/about/author/')
@@ -17,4 +17,4 @@ class AboutUrlTests(TestCase):
 
     def test_tech_url_exists_at_desired_location(self):
         response = self.guest_client.get('/about/tech/')
-        self.assertEqual(response.status_code, HTTPStatus.OK)    
+        self.assertEqual(response.status_code, HTTPStatus.OK)
