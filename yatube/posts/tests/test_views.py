@@ -1,8 +1,8 @@
+from django import forms
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
-from django.conf import settings
-from django import forms
 
 from ..models import Post, Group
 
@@ -82,7 +82,7 @@ class PostPagesTests(TestCase):
                                           slug='test_slug',
                                           description='Тестовое описание'
                                           )
-        Post.objects.create(
+        self.post = Post.objects.create(
             text='Тестовый текст',
             author=self.user,
             group=self.group,
@@ -110,44 +110,87 @@ class PostPagesTests(TestCase):
             with self.subTest(template=template):
                 response = self.authorized_client.get(reverse_name)
                 self.assertTemplateUsed(response, template)
+# Первый вариант - тест для каждой страницы
 
-        def test_home_page_show_correct_context(self):
-            response = self.guest_client.get(reverse('posts:index'))
-            form_fields = {
-                'text': forms.fields.CharField,
-                'group': forms.fields.CharField,
-            }
+    def test_post_asserts(self, post: Post = None):
+        if not post:
+            post = self.post
+        tests = [
+            (post.text, 'Тестовый текст'),
+            (post.author, self.user),
+            (post.group, self.group),
+        ]
+        for value, expected in tests:
+            with self.subTest(value=value):
+                self.assertEqual(value, expected)
 
+    def test_home_page_show_correct_context(self):
+        response = self.guest_client.get(reverse('posts:index'))
+        post = response.context['page_obj'][0]
+        self.test_post_asserts(post=post)
+
+    def test_post_group_page_show_correct_context(self):
+        response = self.guest_client.get(
+            reverse('posts:group_list', kwargs={'slug': self.group.slug}))
+        post = response.context['page_obj'][0]
+        self.test_post_asserts(post=post)
+
+    def test_profile_page_show_correct_context(self):
+        response = self.guest_client.get(
+            reverse('posts:profile', kwargs={'username': self.user}))
+        post = response.context['page_obj'][0]
+        self.test_post_asserts(post=post)
+
+    def test_post_create_show_correct_context(self):
+        form_fields = {
+            'text': forms.fields.CharField,
+            'group': forms.models.ModelChoiceField
+        }
+        response = self.authorized_client.get(reverse('posts:post_create'))
+        for value, expected in form_fields.items():
+            with self.subTest(value=value):
+                form_field = response.context['form'].fields[value]
+                self.assertIsInstance(form_field, expected)
+
+    def test_post_edit_show_correct_context(self):
+        form_fields = {
+            'text': forms.fields.CharField,
+            'group': forms.models.ModelChoiceField
+        }
+        response = self.authorized_client.get(
+            reverse('posts:post_edit', kwargs={'post_id': 1}))
+        for value, expected in form_fields.items():
+            with self.subTest(value=value):
+                form_field = response.context['form'].fields[value]
+                self.assertIsInstance(form_field, expected)
+
+# Второй вариант - тест для всех однотипных страниц (DRY)
+    def test_posts_pages_show_correct_context(self):
+        urls = [
+            reverse('posts:index'),
+            reverse('posts:group_list', kwargs={'slug': self.group.slug}),
+            reverse('posts:profile', kwargs={'username': self.user})
+        ]
+        for url in urls:
+            response = self.guest_client.get(url)
+            post = response.context['page_obj'][0]
+
+            self.assertEqual(post.text, 'Тестовый текст')
+            self.assertEqual(post.author, self.user)
+            self.assertEqual(post.group, self.group)
+
+    def test_post_create_edit_show_correct_context(self):
+        urls = [
+            reverse('posts:post_create'),
+            reverse('posts:post_edit', kwargs={'post_id': 1})
+        ]
+        form_fields = {
+            'text': forms.fields.CharField,
+            'group': forms.models.ModelChoiceField
+        }
+        for url in urls:
+            response = self.authorized_client.get(url)
             for value, expected in form_fields.items():
                 with self.subTest(value=value):
                     form_field = response.context['form'].fields[value]
                     self.assertIsInstance(form_field, expected)
-
-        def test_post_list_page_list_is_1(self):
-            response = self.authorized_client.get(reverse('post:post_list'))
-            self.assertEqual(response.context['object_list'].count(), 1)
-
-        def test_posts_list_page_show_correct_context(self):
-            response = self.authorized_client.get(reverse('posts:posts_list'))
-            first_object = response.context['page_obj'][0]
-            post_text = first_object.text
-            post_pub_date = first_object.pub_date
-            post_author = first_object.author.get_full_name
-            post_group = first_object.group
-            self.assertEqual(post_text, 'Текстовый текст')
-            self.assertEqual(post_pub_date, '1.01.1991')
-            self.assertEqual(post_author, 'HamidMusic')
-            self.assertEqual(post_group, 'Тестовая группа')
-
-        def test_post_detail_pages_show_correct_context(self):
-            response = self.authorized_client.get(
-                reverse('posts:post_detail', kwargs={'id': 'post_id'})
-            )
-            self.assertEqual(response.context['post'].title, 'Тестовый текст')
-            self.assertEqual(response.context['count'].text,
-                             'Колличество постов')
-
-        def test_initial_value(self):
-            response = self.guest_client.get(reverse('posts:index'))
-            title_inital = response.context['form'].fields['title'].initial
-            self.assertEqual(title_inital, 'Значение по-умолчанию')
