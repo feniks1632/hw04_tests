@@ -13,18 +13,18 @@ class PostCreateFormTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-
-    def setUp(self):
-        super().setUp()
-        self.guest_user = Client()
-        self.user = User.objects.create_user(username='HamidMusic')
-        self.authorized_client = Client()
-        self.authorized_client.force_login(self.user)
-        self.group = Group.objects.create(
+        cls.guest_client = Client()
+        cls.user = User.objects.create_user(username='HamidMusic')
+        cls.authorized_client = Client()
+        cls.authorized_client.force_login(cls.user)
+        cls.group = Group.objects.create(
             title='Тестовая группа',
             slug='test_slug',
             description='Тестовое описание'
         )
+
+    def setUp(self):
+        super().setUp()
 
     def test_create_post(self):
         posts_count = Post.objects.count()
@@ -91,3 +91,5 @@ class PostCreateFormTests(TestCase):
             response,
             reverse('posts:post_detail', kwargs={'post_id': old_text.id})
         )
+
+        

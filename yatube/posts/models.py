@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 
+
 User = get_user_model()
 
 
@@ -46,6 +47,12 @@ class Post(models.Model):
         related_name='posts',
         verbose_name='Группа',
         help_text='Группа, к которой будет относиться пост',
+    )
+
+    image = models.ImageField(
+        'Картинка',
+        upload_to='posts/',
+        blank=True
     )
 
     class Meta:

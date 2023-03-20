@@ -52,14 +52,17 @@ def post_detail(request, post_id):
     count = post.author.posts.count()
     context = {
         'post': post,
-        'count': count
+        'count': count,
     }
     return render(request, 'posts/post_detail.html', context)
 
 
 @login_required
 def post_create(request):
-    form = PostForm(request.POST or None)
+    form = PostForm(
+        request.POST or None,
+        request.FILES or None
+    )
     if form.is_valid():
         new_post = form.save(commit=False)
         new_post.author = request.user
@@ -77,13 +80,21 @@ def post_edit(request, post_id):
     if request.user != post.author:
         return redirect('posts:post_detail', post_id=post.pk)
 
-    form = PostForm(request.POST or None, instance=post)
+    form = PostForm(
+        request.POST or None,
+        instance=post,
+        files=request.FILES or None,
+    )
     if form.is_valid():
         form.save()
         return redirect('posts:post_detail', post_id=post.pk)
 
-    return render(request, 'posts/post_create.html', {
-        'post': post,
-        'is_edit': True,
-        'form': form,
-    })
+    return render(
+        request,
+        'posts/post_create.html',
+        {
+            'post': post,
+            'is_edit': True,
+            'form': form,
+        }
+    )

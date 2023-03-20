@@ -12,90 +12,67 @@ class PostURLTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-
-    def setUp(self):
-        self.guest_client = Client()
-        self.user = User.objects.create_user(username='HamidMusic')
-        self.authorized_client = Client()
-        self.authorized_client.force_login(self.user)
-        Post.objects.create(
-            text='Тестовый текст',
-            author=self.user,
-        )
-
-    def test_home_url_exists_at_desired_location(self):
-        response = self.guest_client.get('/')
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-
-    def test_profile_url_exists_at_desired_location(self):
-        response = self.guest_client.get('/profile/HamidMusic/')
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-
-    def test_post_detail_url_exists_at_desired_location(self):
-        response = self.guest_client.get('/posts/1/')
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-
-    def test_post_create_url_exists_at_desired_location(self):
-        response = self.authorized_client.get('/create/')
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-
-    def test_post_edit_url_exists_at_desired_location_authorized(self):
-        response = self.authorized_client.get('/posts/1/edit/')
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-
-    def test_post_create_url_redirect_anonymous_on_admin_login(self):
-        response = self.guest_client.get('/create/', follow=True)
-        self.assertRedirects(
-            response, '/auth/login/?next=/create/')
-
-    def test_post_edit_url_redirect_anonymous_on_admin_login(self):
-        response = self.guest_client.get('/posts/1/edit/', follow=True)
-        self.assertRedirects(
-            response, ('/auth/login/?next=/posts/1/edit/'))
-
-    def test_wrong_url_returns_404(self):
-        response = self.client.get('something/really/weird/')
-        self.assertEqual(response.status_code, 404)
-
-    def test_urls_uses_correct_template(self):
-        templates_url_names = {
-            'posts/index.html': '/',
-            'posts/profile.html': '/profile/HamidMusic/',
-            'posts/post_detail.html': '/posts/1/',
-            'posts/post_create.html': '/posts/1/edit/',
-        }
-        for template, url in templates_url_names.items():
-            with self.subTest(url=url):
-                response = self.authorized_client.get(url)
-                self.assertTemplateUsed(response, template)
-
-
-class GroupURLTests(TestCase):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-
-        Group.objects.create(
+        cls.guest_client = Client()
+        cls.user = User.objects.create_user(username='HamidMusic')
+        cls.authorized_client = Client()
+        cls.authorized_client.force_login(cls.user)
+        cls.group = Group.objects.create(
             title='Тестовый заголовок',
             slug='test-slug',
             description='Описание',
         )
+        Post.objects.create(
+            text='Тестовый текст',
+            author=cls.user,
+            group=cls.group
+        )
 
     def setUp(self):
-        self.guest_client = Client()
-        self.user = User.objects.create_user(username='HamidMusic')
-        self.authorized_client = Client()
-        self.authorized_client.force_login(self.user)
+        super().setUp()
 
-    def test_group_posts_url_exists_at_desired_location(self):
-        response = self.guest_client.get('/group/test-slug/')
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+    def test_urls_exists_at_desired_locations_for_guest_client(self):
+        urls = [
+            '/',
+            '/profile/HamidMusic/',
+            '/posts/1/',
+            '/group/test-slug/'
+        ]
+        for url in urls:
+            response = self.guest_client.get(url)
+            self.assertEqual(response.status_code, HTTPStatus.OK)
+
+    def test_urls_exists_at_desired_locations_for_authorized_client(self):
+        urls = [
+            '/create/',
+            '/posts/1/edit/',
+        ]
+        for url in urls:
+            response = self.authorized_client.get(url)
+            self.assertEqual(response.status_code, HTTPStatus.OK)
+
+    def test_urls_redirect_anonymous_on_login(self):
+        urls = [
+            '/create/',
+            '/posts/1/edit/',
+        ]
+        for url in urls:
+            response = self.guest_client.get(url, follow=True)
+            self.assertRedirects(response, '/auth/login/?next=' + url)
+
+    def test_wrong_url_returns_404(self):
+        response = self.client.get('something/really/weird/')
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
     def test_urls_uses_correct_template(self):
         templates_url_names = {
-            'posts/group_list.html': '/group/test-slug/'
+            '/': 'posts/index.html',
+            '/profile/HamidMusic/': 'posts/profile.html',
+            '/posts/1/': 'posts/post_detail.html',
+            '/posts/1/edit/': 'posts/post_create.html',
+            '/create/': 'posts/post_create.html',
+            '/group/test-slug/': 'posts/group_list.html'
         }
-        for template, url in templates_url_names.items():
+        for url, template in templates_url_names.items():
             with self.subTest(url=url):
                 response = self.authorized_client.get(url)
                 self.assertTemplateUsed(response, template)
