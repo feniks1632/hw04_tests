@@ -91,5 +91,3 @@ class PostCreateFormTests(TestCase):
             response,
             reverse('posts:post_detail', kwargs={'post_id': old_text.id})
         )
-
-        
