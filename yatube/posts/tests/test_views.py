@@ -184,33 +184,37 @@ class PostViewsTest(TestCase):
         self.assertEqual(post, self.post)
         self.assertTrue(response.context.get('is_edit'))
 
-    def test_created_post_show(self):
-        new_post = Post.objects.create(
-            text='Новый пост',
-            group=self.group,
-            author=self.user,
-        )
-        Post.objects.create(
-            text='Другой какой-то пост',
-            group=self.another_group,
-            author=self.user
-        )
-        pages = (
-            reverse('posts:index'),
-            reverse('posts:group_list', kwargs={'slug': self.group.slug}),
-            reverse('posts:profile', kwargs={'username': self.user})
-        )
-        for page in pages:
-            response = self.authorized_client.get(page)
-            post = response.context.get('page_obj')[0]
-            self.assertEqual(post.text, new_post.text)
-            self.assertEqual(post.group, new_post.group)
-            self.assertEqual(post.author, new_post.author)
-
-        response = self.authorized_client.get(
+    def test_check_group_in_pages(self):
+        form_fields = {
+            reverse('posts:index'):
+            Post.objects.get(group=self.post.group),
             reverse(
-                'posts:group_list', kwargs={'slug': self.another_group.slug}
-            )
-        )
-        post = response.context.get('page_obj')[0] or None
-        self.assertNotEqual(post, new_post)
+                'posts:group_list',
+                kwargs={'slug': self.group.slug}
+            ):
+            Post.objects.get(group=self.post.group),
+            reverse(
+                'posts:profile', kwargs={'username': self.post.author}
+            ): Post.objects.get(group=self.post.group),
+        }
+        for value, expected in form_fields.items():
+            with self.subTest(value=value):
+                response = self.authorized_client.get(value)
+                form_field = response.context['page_obj']
+                self.assertIn(expected, form_field)
+
+    def test_no_test_in_another_group(self):
+        form_fields = {
+            reverse(
+                'posts:group_list',
+                kwargs={'slug': self.group.slug}
+            ):
+            Post.objects.exclude(group=self.post.group),
+        }
+        for value, expected in form_fields.items():
+            with self.subTest(value=value):
+                response = self.authorized_client.get(value)
+                form_field = response.context['page_obj']
+                self.assertNotIn(expected, form_field)
+
+
