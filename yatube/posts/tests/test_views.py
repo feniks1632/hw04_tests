@@ -160,7 +160,6 @@ class PostViewsTest(TestCase):
         form_fields = {
             'text': forms.fields.CharField,
             'group': forms.ModelChoiceField,
-            'image': forms.fields.ImageField
         }
         for value, expected in form_fields.items():
             with self.subTest(value=value):
@@ -174,7 +173,6 @@ class PostViewsTest(TestCase):
         form_fields = {
             'text': forms.fields.CharField,
             'group': forms.ModelChoiceField,
-            'image': forms.fields.ImageField
         }
         for value, expected in form_fields.items():
             with self.subTest(value=value):
@@ -200,7 +198,7 @@ class PostViewsTest(TestCase):
         for value, expected in form_fields.items():
             with self.subTest(value=value):
                 response = self.authorized_client.get(value)
-                form_field = response.context['page_obj']
+                form_field = response.context.get('page_obj')
                 self.assertIn(expected, form_field)
 
     def test_no_test_in_another_group(self):
@@ -214,5 +212,5 @@ class PostViewsTest(TestCase):
         for value, expected in form_fields.items():
             with self.subTest(value=value):
                 response = self.authorized_client.get(value)
-                form_field = response.context['page_obj']
+                form_field = response.context.get('page_obj')
                 self.assertNotIn(expected, form_field)
