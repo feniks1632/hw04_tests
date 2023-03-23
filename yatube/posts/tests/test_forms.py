@@ -13,10 +13,7 @@ class PostCreateFormTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.guest_client = Client()
         cls.user = User.objects.create_user(username='HamidMusic')
-        cls.authorized_client = Client()
-        cls.authorized_client.force_login(cls.user)
         cls.group = Group.objects.create(
             title='Тестовая группа',
             slug='test_slug',
@@ -25,6 +22,9 @@ class PostCreateFormTests(TestCase):
 
     def setUp(self):
         super().setUp()
+        self.guest_client = Client()
+        self.authorized_client = Client()
+        self.authorized_client.force_login(self.user)
 
     def test_create_post(self):
         posts_count = Post.objects.count()

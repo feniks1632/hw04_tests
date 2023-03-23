@@ -13,16 +13,19 @@ class TestPostView:
         try:
             response = client.get(f'/posts/{post_with_group.id}')
         except Exception as e:
-            assert False, f'''Страница `/posts/<post_id>/` работает неправильно. Ошибка: `{e}`'''
+            assert False, f'''Страница `/posts/<post_id>/`
+            работает неправильно. Ошибка: `{e}`'''
         if response.status_code in (301, 302):
             response = client.get(f'/posts/{post_with_group.id}/')
         assert response.status_code != 404, (
-            'Страница `/posts/<post_id>/` не найдена, проверьте этот адрес в *urls.py*'
+            'Страница `/posts/<post_id>/` не найдена,'
+            'проверьте этот адрес в *urls.py*'
         )
 
         post_context = get_field_from_context(response.context, Post)
         assert post_context is not None, (
-            'Проверьте, что передали статью в контекст страницы `/posts/<post_id>/` типа `Post`'
+            'Проверьте, что передали статью'
+            'в контекст страницы `/posts/<post_id>/` типа `Post`'
         )
 
 
@@ -33,14 +36,16 @@ class TestPostEditView:
         try:
             response = client.get(f'/posts/{post_with_group.id}/edit')
         except Exception as e:
-            assert False, f'''Страница `/posts/<post_id>/edit/` работает неправильно. Ошибка: `{e}`'''
+            assert False, f'''Страница `/posts/<post_id>/edit/`'
+            'работает неправильно. Ошибка: `{e}`'''
         if (
                 response.status_code in (301, 302)
                 and not response.url.startswith(f'/posts/{post_with_group.id}')
         ):
             response = client.get(f'/posts/{post_with_group.id}/edit/')
         assert response.status_code != 404, (
-            'Страница `/posts/<post_id>/edit/` не найдена, проверьте этот адрес в *urls.py*'
+            'Страница `/posts/<post_id>/edit/`'
+            'не найдена, проверьте этот адрес в *urls.py*'
         )
 
         assert response.status_code in (301, 302), (
@@ -53,7 +58,7 @@ class TestPostEditView:
         try:
             response = user_client.get(f'/posts/{post_with_group.id}/edit')
         except Exception as e:
-            assert False, f'''Страница `/posts/<post_id>/edit/` работает неправильно. Ошибка: `{e}`'''
+            assert False, f'''Страница `/posts/<post_id>/edit/`работает неправильно. Ошибка: `{e}`'''
         if response.status_code in (301, 302):
             response = user_client.get(f'/posts/{post_with_group.id}/edit/')
         assert response.status_code != 404, (
@@ -105,13 +110,15 @@ class TestPostEditView:
             else f'/posts/{post_with_group.id}/edit'
         )
 
-        response = user_client.post(url, data={'text': text, 'group': post_with_group.group_id})
+        response = user_client.post(
+            url, data={'text': text, 'group': post_with_group.group_id})
 
         assert response.status_code in (301, 302), (
             'Проверьте, что со страницы `/posts/<post_id>/edit/` '
             'после создания поста перенаправляете на страницу поста'
         )
-        post = Post.objects.filter(author=post_with_group.author, text=text, group=post_with_group.group).first()
+        post = Post.objects.filter(
+            author=post_with_group.author, text=text, group=post_with_group.group).first()
         assert post is not None, (
             'Проверьте, что вы изменили пост при отправки формы на странице `/posts/<post_id>/edit/`'
         )

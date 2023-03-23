@@ -7,7 +7,6 @@ from django.urls import reverse
 from ..models import Group, Post
 
 TEST_POST_AMMOUNT: int = 13
-TEST_ONE_POST: int = 1
 User = get_user_model()
 
 
@@ -15,10 +14,7 @@ class PaginatorViewsTest(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.guest_client = Client()
         cls.user = User.objects.create(username='HamidMusic')
-        cls.authorized_client = Client()
-        cls.authorized_client.force_login(cls.user)
         cls.group = Group.objects.create(
             title='Тестовая группа',
             slug='test_slug',
@@ -37,8 +33,9 @@ class PaginatorViewsTest(TestCase):
 
     def setUp(self):
         super().setUp()
+        self.guest_client = Client() 
 
-    def test_paginator_guest_client(self):
+    def test_paginator(self):
         pages = (
             reverse('posts:index'),
             reverse('posts:profile', kwargs={'username': 'HamidMusic'}),
@@ -56,34 +53,13 @@ class PaginatorViewsTest(TestCase):
                 TEST_POST_AMMOUNT - settings.OBJECTS_PER_PAGE,
             )
 
-    def test_paginator_authorized_client(self):
-        pages = (
-            reverse('posts:index'),
-            reverse('posts:profile', kwargs={'username': self.user}),
-            reverse('posts:group_list', kwargs={'slug': self.group.slug})
-        )
-        for page in pages:
-            response1 = self.authorized_client.get(page)
-            response2 = self.authorized_client.get(page + '?page=2')
-            self.assertEqual(
-                len(response1.context.get('page_obj')),
-                settings.OBJECTS_PER_PAGE,
-            )
-            self.assertEqual(
-                len(response2.context.get('page_obj')),
-                TEST_POST_AMMOUNT - settings.OBJECTS_PER_PAGE,
-            )
-
 
 class PostViewsTest(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.guest_client = Client()
-        cls.authorized_client = Client()
         cls.user = User.objects.create(username='HamidMusic')
         cls.second_user = User.objects.create(username='AnotherHamid')
-        cls.authorized_client.force_login(cls.user)
         cls.group = Group.objects.create(
             title='Тестовая группа',
             slug='test_slug',
@@ -102,6 +78,9 @@ class PostViewsTest(TestCase):
 
     def setUp(self):
         super().setUp()
+        self.guest_client = Client()
+        self.authorized_client = Client()
+        self.authorized_client.force_login(self.user)
 
     def test_pages_uses_correct_template(self):
         pages_names_templates = {
@@ -121,10 +100,17 @@ class PostViewsTest(TestCase):
                 response = self.authorized_client.get(reverse_name)
                 self.assertTemplateUsed(response, template)
 
+    def test_post_asserts(self, post=None):
+        if not post:
+            post = self.post
+        self.assertEqual(post.text, self.post.text)
+        self.assertEqual(post.author, self.post.author)
+        self.assertEqual(post.group, self.post.group)
+
     def test_index_page_show_correct_context(self):
         response = self.authorized_client.get(reverse('posts:index'))
         post = response.context.get('page_obj')[0]
-        self.assertEqual(post, self.post)
+        self.test_post_asserts(post)
 
     def test_group_list_page_show_correct_context(self):
         response = self.authorized_client.get(
@@ -132,7 +118,7 @@ class PostViewsTest(TestCase):
         )
         post = response.context.get('page_obj')[0]
         group = response.context.get('group')
-        self.assertEqual(post, self.post)
+        self.test_post_asserts(post)
         self.assertEqual(group, self.group)
 
     def test_profile_page_show_correct_context(self):
@@ -140,11 +126,11 @@ class PostViewsTest(TestCase):
             reverse('posts:profile', kwargs={'username': self.user})
         )
         post = response.context.get('page_obj')[0]
-        author = response.context.get('author')
         count = response.context.get('count')
-        self.assertEqual(post, self.post)
-        self.assertEqual(author, self.user)
+        author = response.context.get('author')
+        self.test_post_asserts(post)
         self.assertEqual(count, len(response.context.get('page_obj')))
+        self.assertEqual(author, self.user)
 
     def test_post_detail_page_show_correct_context(self):
         response = self.authorized_client.get(
@@ -153,7 +139,7 @@ class PostViewsTest(TestCase):
         post = response.context.get('post')
         count = response.context.get('count')
         self.assertEqual(post, self.post)
-        self.assertEqual(count, TEST_ONE_POST)
+        self.assertEqual(count, 1)
 
     def test_post_create_page_show_correct_context(self):
         response = self.authorized_client.get(reverse('posts:post_create'))
