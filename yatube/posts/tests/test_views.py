@@ -33,7 +33,7 @@ class PaginatorViewsTest(TestCase):
 
     def setUp(self):
         super().setUp()
-        self.guest_client = Client() 
+        self.guest_client = Client()
 
     def test_paginator(self):
         pages = (
