@@ -100,9 +100,8 @@ class PostViewsTest(TestCase):
                 response = self.authorized_client.get(reverse_name)
                 self.assertTemplateUsed(response, template)
 
-    def test_post_asserts(self, post=None):
-        if not post:
-            post = self.post
+    def assert_post(self, post=None):
+        post = self.post
         self.assertEqual(post.text, self.post.text)
         self.assertEqual(post.author, self.post.author)
         self.assertEqual(post.group, self.post.group)
@@ -110,7 +109,7 @@ class PostViewsTest(TestCase):
     def test_index_page_show_correct_context(self):
         response = self.authorized_client.get(reverse('posts:index'))
         post = response.context.get('page_obj')[0]
-        self.test_post_asserts(post)
+        self.assert_post(post)
 
     def test_group_list_page_show_correct_context(self):
         response = self.authorized_client.get(
@@ -118,7 +117,7 @@ class PostViewsTest(TestCase):
         )
         post = response.context.get('page_obj')[0]
         group = response.context.get('group')
-        self.test_post_asserts(post)
+        self.assert_post(post)
         self.assertEqual(group, self.group)
 
     def test_profile_page_show_correct_context(self):
@@ -128,7 +127,7 @@ class PostViewsTest(TestCase):
         post = response.context.get('page_obj')[0]
         count = response.context.get('count')
         author = response.context.get('author')
-        self.test_post_asserts(post)
+        self.assert_post(post)
         self.assertEqual(count, len(response.context.get('page_obj')))
         self.assertEqual(author, self.user)
 
@@ -138,7 +137,7 @@ class PostViewsTest(TestCase):
         )
         post = response.context.get('post')
         count = response.context.get('count')
-        self.assertEqual(post, self.post)
+        self.assert_post(post)
         self.assertEqual(count, 1)
 
     def test_post_create_page_show_correct_context(self):
@@ -187,7 +186,7 @@ class PostViewsTest(TestCase):
                 form_field = response.context.get('page_obj')
                 self.assertIn(expected, form_field)
 
-    def test_no_test_in_another_group(self):
+    def test_no_post_in_another_group(self):
         form_fields = {
             reverse(
                 'posts:group_list',
