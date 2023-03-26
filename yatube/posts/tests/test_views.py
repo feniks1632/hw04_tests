@@ -6,6 +6,7 @@ from django.urls import reverse
 
 from ..models import Group, Post
 
+
 TEST_POST_AMMOUNT: int = 13
 User = get_user_model()
 
@@ -100,8 +101,7 @@ class PostViewsTest(TestCase):
                 response = self.authorized_client.get(reverse_name)
                 self.assertTemplateUsed(response, template)
 
-    def assert_post(self, post=None):
-        post = self.post
+    def assert_post(self, post):
         self.assertEqual(post.text, self.post.text)
         self.assertEqual(post.author, self.post.author)
         self.assertEqual(post.group, self.post.group)
