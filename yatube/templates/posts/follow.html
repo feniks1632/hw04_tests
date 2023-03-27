@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 {% block title %}
-  Последние обновления на сайте
+  Последние обновления автора {{ author }}
 {% endblock %}
 {% block content %}
   {% include 'posts/includes/switcher.html' %}
   <div class="container">
-    <h1>Последние обновления на сайте</h1>
+    <h1>Последние обновления автора {{ author }}</h1>
     {% load cache %}
     {% cache 20 index_page with page_obj%}
       {% for post in page_obj %}

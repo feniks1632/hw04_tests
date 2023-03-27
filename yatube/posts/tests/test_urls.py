@@ -1,5 +1,6 @@
 from http import HTTPStatus
 
+from django.core.cache import cache
 from django.contrib.auth import get_user_model
 from django.test import TestCase, Client
 
@@ -12,10 +13,7 @@ class PostURLTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.guest_client = Client()
         cls.user = User.objects.create_user(username='HamidMusic')
-        cls.authorized_client = Client()
-        cls.authorized_client.force_login(cls.user)
         cls.group = Group.objects.create(
             title='Тестовый заголовок',
             slug='test-slug',
@@ -29,6 +27,10 @@ class PostURLTests(TestCase):
 
     def setUp(self):
         super().setUp()
+        self.guest_client = Client()
+        self.authorized_client = Client()
+        self.authorized_client.force_login(self.user)
+        cache.clear()
 
     def test_urls_exists_at_desired_locations_for_guest_client(self):
         urls = [
@@ -70,7 +72,8 @@ class PostURLTests(TestCase):
             '/posts/1/': 'posts/post_detail.html',
             '/posts/1/edit/': 'posts/post_create.html',
             '/create/': 'posts/post_create.html',
-            '/group/test-slug/': 'posts/group_list.html'
+            '/group/test-slug/': 'posts/group_list.html',
+            '/something/really/weird/': 'core/404.html'
         }
         for url, template in templates_url_names.items():
             with self.subTest(url=url):

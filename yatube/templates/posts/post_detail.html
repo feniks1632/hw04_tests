@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load thumbnail %}
 {% block title %}
   Пост {{ post }}
 {% endblock %}
@@ -41,6 +42,7 @@
             Редактировать запись
           </a>
         {% endif %}
+        {% include 'includes/comment.html' %}
     </article>
   </div>
 {% endblock %}
