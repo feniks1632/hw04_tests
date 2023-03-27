@@ -324,7 +324,6 @@ class FollowViewsTest(TestCase):
         self.assertRedirects(response, reverse('posts:follow_index'))
 
     def test_follower_show_correct_posts(self):
-        # Проверка подписки на автора поста
         Follow.objects.get_or_create(user=self.user, author=self.author_1)
         response = self.authorized_client.get(reverse('posts:follow_index'))
 
